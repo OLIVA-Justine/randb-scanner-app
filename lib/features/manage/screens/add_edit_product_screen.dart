@@ -190,7 +190,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               const SizedBox(height: AppSizes.lg),
 
               // ── Optional fields ───────────────────────────────
-              _SectionLabel(label: 'Additional Details (Optional)'),
+              const _SectionLabel(label: 'Additional Details (Optional)'),
               const SizedBox(height: AppSizes.md),
 
               // Category

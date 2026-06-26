@@ -3,109 +3,134 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../models/transaction_model.dart';
+import '../../manage/services/database_service.dart';
 import '../widgets/home_header_card.dart';
 import '../widgets/recent_scans_section.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
-  // ── Mock data — will be replaced with real DB data in later modules ──
-  List<TransactionModel> get _mockTransactions {
-    final base = DateTime(2026, 10, 29, 7, 10);
-    return List.generate(4, (i) {
-      final index = 4 - i;
-      return TransactionModel(
-        id: 'txn-$index',
-        orderNumber: 'ORD-0$index',
-        timestamp: base,
-        items: [
-          ScannedItem(
-            barcode: '123456789',
-            productName: 'Sample Product',
-            price: 99.99,
-            quantity: 1,
-          ),
-        ],
-        totalAmount: 99.99,
-      );
-    });
+ 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+ 
+class _HomeScreenState extends State<HomeScreen> {
+  List<TransactionModel> _recentTransactions = [];
+  int _todayScanCount = 0;
+  bool _isLoading = true;
+ 
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
   }
-
+ 
+  Future<void> _loadData() async {
+    try {
+      final all = await database.getAllTransactions();
+      final count = await database.getTodayTransactionCount();
+      if (mounted) {
+        setState(() {
+          // Show most recent 4 transactions on home
+          _recentTransactions = all.take(4).toList();
+          _todayScanCount = count;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+ 
   @override
   Widget build(BuildContext context) {
-    final transactions = _mockTransactions;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // ── App bar ──────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSizes.screenPadding,
-                  AppSizes.md,
-                  AppSizes.screenPadding,
-                  AppSizes.sm,
-                ),
-                child: _HomeAppBar(),
-              ),
+        child: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: _loadData,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-
-            // ── Header card ──────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.screenPadding,
-                ),
-                child: HomeHeaderCard(
-                  name: 'Justine',
-                  role: 'cashier',
-                  scanCount: transactions.length,
-                  shiftCount: 177,
+            slivers: [
+              // ── App bar ────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.screenPadding,
+                    AppSizes.md,
+                    AppSizes.screenPadding,
+                    AppSizes.sm,
+                  ),
+                  child: _HomeAppBar(),
                 ),
               ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.lg)),
-
-            // ── Recent scans ─────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.screenPadding,
-                ),
-                child: RecentScansSection(
-                  transactions: transactions,
-                  onSeeMore: () {
-                    // Will navigate to History tab in a later module
-                  },
+ 
+              // ── Header card ────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.screenPadding,
+                  ),
+                  child: HomeHeaderCard(
+                    name: 'Justine',
+                    role: 'cashier',
+                    scanCount: _todayScanCount,
+                    shiftCount: _recentTransactions.fold(
+                        0, (s, t) => s + t.totalItems),
+                  ),
                 ),
               ),
-            ),
-
-            // ── Bottom padding for nav bar ───────────────────────
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSizes.xxl + AppSizes.lg),
-            ),
-          ],
+ 
+              const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSizes.lg)),
+ 
+              // ── Recent scans ───────────────────────────────
+              SliverToBoxAdapter(
+                child: _isLoading
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSizes.xl),
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                            strokeWidth: 2.5,
+                          ),
+                        ),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.screenPadding,
+                        ),
+                        child: RecentScansSection(
+                          transactions: _recentTransactions,
+                          onSeeMore: () {
+                            // Navigate to History tab — handled by MainShell
+                          },
+                        ),
+                      ),
+              ),
+ 
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSizes.xxl + AppSizes.lg),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-// ── Top app bar row ────────────────────────────────────────────────────────
-
+ 
+// ── Top App Bar ────────────────────────────────────────────────────────────
+ 
 class _HomeAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // App icon + title
         Row(
           children: [
             Container(
@@ -115,11 +140,8 @@ class _HomeAppBar extends StatelessWidget {
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(AppSizes.radiusSm),
               ),
-              child: const Icon(
-                Icons.qr_code_2_rounded,
-                color: Colors.white,
-                size: 22,
-              ),
+              child: const Icon(Icons.qr_code_2_rounded,
+                  color: Colors.white, size: 22),
             ),
             const SizedBox(width: AppSizes.sm),
             Text(
@@ -132,7 +154,6 @@ class _HomeAppBar extends StatelessWidget {
             ),
           ],
         ),
-        // Notification bell
         Container(
           width: 38,
           height: 38,
@@ -141,11 +162,8 @@ class _HomeAppBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppSizes.radiusSm),
             border: Border.all(color: AppColors.divider),
           ),
-          child: Icon(
-            Icons.notifications_none_rounded,
-            size: AppSizes.iconMd,
-            color: AppColors.textSecondary,
-          ),
+          child: const Icon(Icons.notifications_none_rounded,
+              size: AppSizes.iconMd, color: AppColors.textSecondary),
         ),
       ],
     );
