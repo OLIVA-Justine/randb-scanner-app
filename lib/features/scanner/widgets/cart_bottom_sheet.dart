@@ -34,43 +34,44 @@ class CartBottomSheet extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Drag handle ──────────────────────────────────
+              // ── Full-width tap zone for expand/collapse ────
+              // Covers the drag handle + the entire header row
+              // so users don't need precise tapping
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: provider.toggleCartExpanded,
                 onVerticalDragEnd: (d) {
-                  if (d.primaryVelocity != null) {
-                    if (d.primaryVelocity! < -200) provider.setCartExpanded(true);
-                    if (d.primaryVelocity! > 200) provider.setCartExpanded(false);
+                  if (d.primaryVelocity == null) return;
+                  if (d.primaryVelocity! < -300) {
+                    provider.setCartExpanded(true);
+                  } else if (d.primaryVelocity! > 300) {
+                    provider.setCartExpanded(false);
                   }
                 },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.md,
+                    AppSizes.sm,
+                    AppSizes.md,
+                    AppSizes.sm,
+                  ),
                   child: Column(
                     children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppColors.divider,
-                          borderRadius: BorderRadius.circular(2),
+                      // Drag handle pill
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.divider,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
+                      const SizedBox(height: AppSizes.sm),
 
-              // ── Cart header ──────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSizes.md, 0, AppSizes.md, AppSizes.sm,
-                ),
-                child: Row(
-                  children: [
-                    // Cart icon + label
-                    Expanded(
-                      child: Row(
+                      // Cart summary row
+                      Row(
                         children: [
                           Icon(
                             Icons.shopping_cart_outlined,
@@ -80,7 +81,7 @@ class CartBottomSheet extends StatelessWidget {
                                 : AppColors.primary,
                           ),
                           const SizedBox(width: AppSizes.xs),
-                          Flexible(
+                          Expanded(
                             child: Text(
                               provider.isEmpty
                                   ? 'Cart is empty'
@@ -95,36 +96,44 @@ class CartBottomSheet extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          // Clear button — stops propagation so it
+                          // doesn't also toggle expand
+                          if (!provider.isEmpty)
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () =>
+                                  _confirmClear(context, provider),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSizes.sm),
+                                child: Text(
+                                  'Clear',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Chevron indicator
+                          AnimatedRotation(
+                            duration: const Duration(milliseconds: 200),
+                            turns: expanded ? 0.5 : 0.0,
+                            child: const Icon(
+                              Icons.keyboard_arrow_up_rounded,
+                              size: 22,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    // Clear button
-                    if (!provider.isEmpty)
-                      GestureDetector(
-                        onTap: () => _confirmClear(context, provider),
-                        child: Text(
-                          'Clear',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ),
-                    // Expand chevron
-                    const SizedBox(width: AppSizes.sm),
-                    Icon(
-                      expanded
-                          ? Icons.keyboard_arrow_down_rounded
-                          : Icons.keyboard_arrow_up_rounded,
-                      size: 20,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
-              // ── Expanded cart items ──────────────────────────
+              // ── Expanded cart items ────────────────────────
               if (expanded && !provider.isEmpty) ...[
                 const Divider(height: 1, color: AppColors.divider),
                 ConstrainedBox(
@@ -151,10 +160,10 @@ class CartBottomSheet extends StatelessWidget {
                 ),
               ],
 
-              // ── Empty expanded state ─────────────────────────
               if (expanded && provider.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSizes.lg),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: AppSizes.lg),
                   child: Text(
                     'Scan a product to add it to the cart',
                     style: GoogleFonts.poppins(
@@ -186,7 +195,8 @@ class CartBottomSheet extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel',
-                style: GoogleFonts.poppins(color: AppColors.textSecondary)),
+                style:
+                    GoogleFonts.poppins(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {

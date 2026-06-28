@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../models/transaction_model.dart';
-import '../../manage/services/database_service.dart';
+import '../../services/database_service.dart';
 import '../providers/history_provider.dart';
 import '../widgets/history_header_card.dart';
 import '../widgets/filter_bar.dart';

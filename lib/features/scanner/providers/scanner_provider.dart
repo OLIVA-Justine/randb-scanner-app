@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../../models/product_model.dart';
 import '../../../models/transaction_model.dart';
-import '../../manage/services/database_service.dart';
+import '../../services/database_service.dart';
 
 enum ScanStatus { idle, found, notFound, saving, saved, error }
 

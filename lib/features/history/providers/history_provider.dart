@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../models/transaction_model.dart';
-import '../../manage/services/database_service.dart';
+import '../../services/database_service.dart';
 
 enum DateFilter { today, yesterday, last7Days, last30Days, allTime }
 

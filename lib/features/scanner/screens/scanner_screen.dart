@@ -4,7 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
-import '../../manage/services/database_service.dart';
+import '../../services/database_service.dart';
 import '../providers/scanner_provider.dart';
 import '../widgets/cart_bottom_sheet.dart';
 import '../widgets/manual_entry_dialog.dart';

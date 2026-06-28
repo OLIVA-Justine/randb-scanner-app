@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../models/transaction_model.dart';
-import '../../manage/services/database_service.dart';
+import '../../services/database_service.dart';
 import '../widgets/home_header_card.dart';
 import '../widgets/recent_scans_section.dart';
 
@@ -145,7 +145,7 @@ class _HomeAppBar extends StatelessWidget {
             ),
             const SizedBox(width: AppSizes.sm),
             Text(
-              'Scanner',
+              'RandB',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,

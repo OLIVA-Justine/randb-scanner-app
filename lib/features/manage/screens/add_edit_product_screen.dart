@@ -33,8 +33,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   // Preset category suggestions
   final List<String> _categorySuggestions = [
-    'Beverages', 'Snacks', 'Dairy', 'Bakery',
-    'Canned Goods', 'Frozen', 'Personal Care', 'Others',
+    'Perfume', 'Maxglow', 'Groceries', 'Bakery',
+    'Beauty Products', 'Drinks/Beverages',
   ];
 
   @override

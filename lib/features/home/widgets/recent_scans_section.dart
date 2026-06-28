@@ -49,7 +49,7 @@ class RecentScansSection extends StatelessWidget {
             final isLast = index == transactions.length - 1;
             return RecentScanTile(
               transaction: transactions[index],
-              isHighlighted: isLast,
+              isHighlighted: !isLast,
             );
           }),
 
